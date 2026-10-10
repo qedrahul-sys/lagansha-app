@@ -1,0 +1,2843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lagansha - Discover Your Partner</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pink: #e8365d;
+    --pink-light: #fce8ed;
+    --pink-soft: #fdf0f3;
+    --blue-light: #b8e4f5;
+    --blue-pale: #d6f0fa;
+    --text-dark: #1a1a2e;
+    --text-mid: #555;
+    --text-muted: #999;
+    --bg: #f3f4f6;
+    --white: #ffffff;
+    --border: #e5e7eb;
+    --radius: 16px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.05);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-dark);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  nav {
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 70px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    text-decoration: none;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .logo-icon {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, #e8365d, #ff6b8a);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .btn-register {
+    background: var(--text-dark);
+    color: var(--white);
+    border: none;
+    padding: 10px 22px;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .btn-register:hover {
+    background: var(--pink);
+    transform: translateY(-1px);
+  }
+
+  .heart-btn {
+    width: 42px;
+    height: 42px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .heart-btn:hover, .heart-btn.active {
+    background: var(--pink-soft);
+    border-color: var(--pink);
+    color: var(--pink);
+  }
+
+  .heart-btn .badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--pink);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--white);
+  }
+
+  .container {
+    display: flex;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 30px 24px;
+    gap: 28px;
+    align-items: flex-start;
+  }
+
+  .sidebar {
+    width: 300px;
+    flex-shrink: 0;
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px 22px;
+    box-shadow: var(--shadow);
+    max-height: calc(100vh - 130px);
+    overflow-y: auto;
+    position: sticky;
+    top: 100px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    border-bottom: 1.5px solid var(--border);
+    padding-bottom: 12px;
+  }
+
+  .sidebar-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .filter-icon { color: var(--pink); font-size: 1.1rem; }
+
+  .reset-btn {
+    color: var(--pink);
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: none;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: opacity 0.2s;
+  }
+
+  .reset-btn:hover { opacity: 0.7; }
+
+  .field-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    margin-top: 18px;
+  }
+
+  .field-label:first-of-type { margin-top: 0; }
+
+  .search-wrap { position: relative; }
+
+  .search-input {
+    width: 100%;
+    padding: 11px 12px 11px 36px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.88rem;
+    color: var(--text-mid);
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .search-input:focus { border-color: var(--pink); background: white; }
+
+  .search-wrap .si {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  select, .text-input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.88rem;
+    color: var(--text-mid);
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  select:focus, .text-input:focus { border-color: var(--pink); background-color: white; }
+  .text-input { background-image: none; cursor: text; }
+
+  .age-pills {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .age-pill {
+    padding: 10px 4px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    color: var(--text-mid);
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .age-pill.active {
+    background: var(--pink);
+    color: white;
+    border-color: var(--pink);
+  }
+
+  .age-pill:hover:not(.active) { border-color: var(--pink); color: var(--pink); }
+
+  .main { flex: 1; min-width: 0; }
+
+  .main-header {
+    margin-bottom: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .main-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+  }
+
+  .main-header p { font-size: 0.95rem; color: var(--text-mid); }
+  .main-header p span { color: var(--pink); font-weight: 700; }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    display: flex;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid transparent;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    border-color: var(--pink-light);
+  }
+
+  .card-img {
+    width: 140px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    background: #eaeaea;
+  }
+
+  .card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .card-img.no-photo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .avatar-initials {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    letter-spacing: -2px;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .fav-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 1rem;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  .fav-btn:hover, .fav-btn.active { 
+    color: var(--pink); 
+    background: white; 
+    transform: scale(1.1);
+  }
+
+  .card-body {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .card-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.25;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .card-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--pink);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    margin-bottom: 12px;
+  }
+
+  .card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-grow: 1;
+  }
+
+  .info-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.83rem;
+    color: var(--text-mid);
+  }
+
+  .info-row .ico {
+    width: 18px;
+    text-align: center;
+    color: var(--pink);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    border-top: 1px solid #f3f4f6;
+    padding-top: 12px;
+  }
+
+  .btn-profile {
+    background: var(--text-dark);
+    color: white;
+    border: none;
+    padding: 9px 14px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1.2;
+    transition: background 0.2s;
+    flex-grow: 1;
+    text-align: center;
+  }
+
+  .btn-profile:hover { background: var(--pink); }
+
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text-mid);
+    transition: all 0.2s;
+  }
+
+  .icon-btn.edit:hover { color: #3b82f6; border-color: #3b82f6; background: #eff6ff; }
+  .icon-btn.del { color: var(--pink); border-color: var(--pink-light); background: var(--pink-soft); }
+  .icon-btn.del:hover { background: var(--pink); color: white; border-color: var(--pink); }
+
+  .verified-badge {
+    color: #3b82f6;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .mobile-filter-toggle {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    background: var(--pink);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(232,54,93,0.4);
+    z-index: 150;
+    border: none;
+    cursor: pointer;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .build-yours {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--text-dark);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    z-index: 200;
+    font-family: 'DM Sans', sans-serif;
+    border: none;
+    animation: slideIn 0.5s ease;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .build-yours .bx-icon { font-size: 1rem; }
+
+  .close-build {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0 0 0 4px;
+  }
+
+  .no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  .no-results-icon { font-size: 3rem; margin-bottom: 12px; }
+  .no-results-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+  }
+  .no-results-text { font-size: 0.9rem; color: var(--text-muted); }
+
+  .loading-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 0;
+    grid-column: 1 / -1;
+  }
+
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--pink);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,15,30,0.65);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(30px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+
+  .modal-box {
+    background: var(--white);
+    border-radius: 20px;
+    width: 900px;
+    max-width: 96vw;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+    animation: slideUp 0.28s ease;
+  }
+
+  .modal-header {
+    background: #0f1528;
+    padding: 24px 30px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-shrink: 0;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .modal-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    margin-bottom: 4px;
+  }
+
+  .modal-sub { font-size: 0.88rem; color: rgba(255,255,255,0.65); }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.2s;
+  }
+
+  .modal-close:hover { color: white; }
+
+  .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 30px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .modal-body::-webkit-scrollbar { width: 6px; }
+  .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--pink);
+    margin-bottom: 16px;
+  }
+
+  .sec-icon { font-size: 1rem; }
+
+  .photo-upload {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 26px 20px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .photo-upload:hover { border-color: var(--pink); background: var(--pink-soft); }
+  .photo-icon { font-size: 2rem; color: var(--pink); }
+  .photo-label { font-weight: 700; font-size: 0.95rem; color: var(--text-dark); }
+  .photo-hint { font-size: 0.8rem; color: var(--text-muted); }
+
+  .form-grid { display: grid; gap: 14px; margin-bottom: 14px; }
+  .form-grid.three { grid-template-columns: repeat(3, 1fr); }
+  .form-grid.two { grid-template-columns: repeat(2, 1fr); }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+
+  .flabel {
+    font-size: 0.67rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .finput {
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.85rem;
+    color: var(--text-dark);
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.18s;
+    width: 100%;
+  }
+
+  select.finput {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-color: var(--bg);
+    cursor: pointer;
+  }
+
+  .finput:focus { border-color: var(--pink); background: white; }
+  .ftextarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+
+  .verified-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-top: 20px;
+    cursor: pointer;
+    background: var(--bg);
+    max-width: 360px;
+  }
+
+  .vchk { width: 18px; height: 18px; accent-color: var(--pink); cursor: pointer; flex-shrink: 0; }
+  .vlabel { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .vtitle { font-weight: 700; font-size: 0.9rem; }
+  .vdesc { font-size: 0.78rem; color: var(--text-muted); margin-top: 1px; }
+
+  .modal-footer {
+    display: flex;
+    gap: 14px;
+    padding: 18px 30px;
+    border-top: 1.5px solid var(--border);
+    flex-shrink: 0;
+    background: white;
+  }
+
+  .btn-cancel {
+    flex: 1;
+    padding: 12px;
+    border-radius: 50px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-mid);
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.2s;
+  }
+
+  .btn-cancel:hover { background: #e5e7eb; }
+
+  .btn-create {
+    flex: 2;
+    padding: 12px;
+    border-radius: 50px;
+    border: none;
+    background: var(--pink);
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.2s, transform 0.1s;
+    text-align: center;
+  }
+
+  .btn-create:hover { background: #d02b51; }
+
+  /* View Profile Modal Specifics */
+  .vp-box {
+    background: white;
+    border-radius: 20px;
+    width: 840px;
+    max-width: 96vw;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+    animation: slideUp 0.28s ease;
+    position: relative;
+  }
+
+  .vp-close {
+    position: absolute;
+    top: 14px; right: 14px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+
+  .vp-close:hover { background: rgba(255,255,255,0.35); }
+
+  .vp-header {
+    background: linear-gradient(135deg, #c0183b 0%, #e8365d 60%, #b31038 100%);
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+  }
+
+  .vp-hero-photo {
+    width: 90px; height: 90px;
+    border-radius: 16px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    background: #fff;
+  }
+
+  .vp-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .vp-initials-box {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; font-weight: 800;
+    font-family: 'Playfair Display', serif;
+    color: var(--text-dark);
+  }
+
+  .vp-hero-info { flex: 1; }
+  .vp-name-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+
+  .vp-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: white;
+    font-family: 'Playfair Display', serif;
+    line-height: 1.2;
+  }
+
+  .vp-verified {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .vp-meta { color: rgba(255,255,255,0.85); font-size: 0.88rem; font-weight: 500; }
+
+  .vp-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .vp-columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0 16px;
+    border-bottom: 1.5px solid var(--border);
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+  }
+
+  .vp-sec-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--pink);
+    border-bottom: 1.5px solid var(--border);
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+  }
+
+  .vp-ico { font-size: 0.85rem; }
+
+  .vp-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 0.8rem;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .vp-lbl { color: var(--text-muted); flex-shrink: 0; }
+  .vp-val { font-weight: 600; color: var(--text-dark); text-align: right; }
+
+  .vp-hs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+    margin-top: 4px;
+  }
+
+  .vp-hs-lbl { font-size: 0.7rem; color: var(--text-muted); }
+  .vp-hs-val { font-size: 0.82rem; font-weight: 700; color: var(--text-dark); }
+
+  .vp-bio-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    background: var(--bg);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .vp-bio-title { font-size: 0.85rem; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; }
+  .vp-bio-text { font-size: 0.82rem; color: var(--text-mid); line-height: 1.5; font-style: italic; }
+
+  .vp-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-top: 1.5px solid var(--border);
+    background: white;
+    flex-shrink: 0;
+    gap: 12px;
+  }
+
+  .vp-footer-note { font-size: 0.75rem; color: var(--text-muted); }
+  .vp-footer-actions { display: flex; gap: 8px; align-items: center; }
+
+  .vp-btn-maybe {
+    padding: 8px 16px; border-radius: 50px; border: none;
+    background: none; color: var(--text-mid); font-weight: 600;
+    font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  }
+
+  .vp-btn-edit {
+    padding: 8px 16px; border-radius: 8px;
+    background: var(--text-dark); color: white; border: none;
+    font-size: 0.82rem; font-weight: 700; cursor: pointer;
+  }
+
+  .vp-btn-delete {
+    padding: 8px 16px; border-radius: 8px;
+    background: var(--pink-soft); color: var(--pink);
+    border: 1.5px solid var(--pink-light);
+    font-size: 0.82rem; font-weight: 700; cursor: pointer;
+  }
+
+  .vp-btn-interest {
+    padding: 8px 18px; border-radius: 8px;
+    background: linear-gradient(135deg, #e8365d, #c0183b); color: white; border: none;
+    font-size: 0.82rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(232,54,93,0.35);
+  }
+
+  #toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    padding: 12px 28px; border-radius: 50px; font-size: 0.88rem; font-weight: 600;
+    font-family: 'DM Sans', sans-serif; z-index: 9999;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+
+  .toast-show { opacity: 1 !important; pointer-events: auto !important; }
+  .toast-success { background: #1a1a2e; color: white; }
+  .toast-danger  { background: #e8365d; color: white; }
+
+  .del-box {
+    background: white; border-radius: 20px; padding: 32px 28px;
+    width: 400px; max-width: 95vw; text-align: center;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+    animation: slideUp 0.25s ease;
+  }
+
+  .del-icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .del-title { font-size: 1.2rem; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; }
+  .del-msg { font-size: 0.85rem; color: var(--text-mid); line-height: 1.5; margin-bottom: 24px; }
+  .del-actions { display: flex; gap: 10px; }
+
+  .del-btn-cancel {
+    flex: 1; padding: 11px; border-radius: 50px; border: 1.5px solid var(--border);
+    background: var(--bg); font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  }
+
+  .del-btn-confirm {
+    flex: 1; padding: 11px; border-radius: 50px; border: none;
+    background: var(--pink); color: white; font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(232,54,93,0.35);
+  }
+
+  /* Responsive Media Queries */
+  @media (max-width: 1024px) {
+    .container { gap: 18px; }
+    .sidebar { width: 250px; }
+  }
+
+  .sidebar-close-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: var(--bg);
+    border-radius: 50%;
+    color: var(--text-mid);
+    font-size: 1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .sidebar-close-btn:hover { background: var(--pink-soft); color: var(--pink); }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 490;
+  }
+  .sidebar-overlay.active { display: block; }
+
+  @media (max-width: 850px) {
+    .sidebar {
+      position: fixed;
+      left: -320px;
+      top: 0;
+      bottom: 0;
+      z-index: 500;
+      width: 300px;
+      max-height: 100vh;
+      border-radius: 0;
+      transition: left 0.3s ease;
+    }
+    .sidebar.mobile-open { left: 0; }
+    .mobile-filter-toggle { display: flex; }
+    .container { padding: 20px 16px; }
+    .sidebar-close-btn { display: flex; }
+  }
+
+  @media (max-width: 700px) {
+    .form-grid.three { grid-template-columns: 1fr 1fr; }
+    .form-grid.two { grid-template-columns: 1fr; }
+    .modal-body { padding: 18px 16px; }
+    .modal-header { padding: 18px; }
+    .modal-footer { padding: 14px 16px; }
+    .vp-columns { grid-template-columns: 1fr; }
+    .vp-bio-row { grid-template-columns: 1fr; }
+    .vp-footer { flex-direction: column; align-items: flex-start; }
+    .main-header h1 { font-size: 1.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="#">
+    <div class="logo-icon">♥</div>
+    Lagansha
+  </a>
+  <div class="nav-right">
+    <button class="btn-register" id="nav-register-btn" onclick="openModal('profileModal')">+ Register Free</button>
+    <div class="heart-btn" id="nav-fav-toggle" onclick="toggleFavoritesOnly()" title="Show Favorites Only">
+      ♥ <span class="badge" id="fav-count">0</span>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- SIDEBAR FILTERS -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">
+        <span class="filter-icon">⊿</span> Refine Search
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button class="reset-btn" onclick="resetFilters()">RESET</button>
+        <button class="sidebar-close-btn" id="sidebar-close-btn" onclick="closeMobileSidebar()" title="Close filters" aria-label="Close filters">✕</button>
+      </div>
+    </div>
+
+    <div class="field-label">Search</div>
+    <div class="search-wrap">
+      <span class="si">🔍</span>
+      <input class="search-input" id="filter-search" type="text" placeholder="Name, city, caste..." oninput="triggerFilter()">
+    </div>
+
+    <div class="field-label">Religion</div>
+    <select id="filter-religion" onchange="triggerFilter()">
+      <option value="Any">All Religions</option>
+    </select>
+
+    <div class="field-label">Age Filter</div>
+    <div class="age-pills">
+      <button class="age-pill active" id="pill-all" onclick="setAgeFilter('All', this)">All</button>
+      <button class="age-pill" onclick="setAgeFilter('20-25', this)">20-25</button>
+      <button class="age-pill" onclick="setAgeFilter('26-30', this)">26-30</button>
+      <button class="age-pill" onclick="setAgeFilter('31+', this)">31+</button>
+    </div>
+
+    <div class="field-label">Location (City/State)</div>
+    <input class="text-input" id="filter-location" type="text" placeholder="City or state..." oninput="triggerFilter()">
+
+    <div class="field-label">Height</div>
+    <select id="filter-height" onchange="triggerFilter()">
+      <option value="Any">Any Height</option>
+    </select>
+
+    <div class="field-label">Marital Status</div>
+    <select id="filter-marital" onchange="triggerFilter()">
+      <option value="Any">Any Status</option>
+    </select>
+
+    <div class="field-label">Mother Tongue</div>
+    <input class="text-input" id="filter-tongue-search" type="text" placeholder="Any Language..." oninput="triggerFilter()">
+
+    <div class="field-label">Manglik Status</div>
+    <select id="filter-manglik" onchange="triggerFilter()">
+      <option value="Any">Any</option>
+    </select>
+
+    <div class="field-label">Rashi (Zodiac)</div>
+    <select id="filter-rashi" onchange="triggerFilter()">
+      <option value="Any">Any Rashi</option>
+    </select>
+
+    <div class="field-label">Complexion</div>
+    <select id="filter-complexion" onchange="triggerFilter()">
+      <option value="Any">Any Complexion</option>
+    </select>
+
+    <div class="field-label">Education</div>
+    <input class="text-input" id="filter-education" type="text" placeholder="e.g. MBA, B.Tech" oninput="triggerFilter()">
+
+    <div class="field-label">Smoking</div>
+    <select id="filter-smoking" onchange="triggerFilter()">
+      <option value="Any">Any</option>
+    </select>
+
+    <div class="field-label">Drinking</div>
+    <select id="filter-drinking" onchange="triggerFilter()">
+      <option value="Any">Any</option>
+    </select>
+
+    <div class="field-label">Family Type</div>
+    <select id="filter-familytype" onchange="triggerFilter()">
+      <option value="Any">Any</option>
+    </select>
+
+    <div class="field-label">Family Values</div>
+    <select id="filter-familyvalues" onchange="triggerFilter()">
+      <option value="Any">Any</option>
+    </select>
+  </aside>
+
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+
+  <!-- MAIN FEED -->
+  <main class="main">
+    <div class="main-header">
+      <div>
+        <h1 id="feed-title">Discover Your Partner</h1>
+        <p>We found <span id="profiles-count">0</span> matching profiles for you.</p>
+      </div>
+    </div>
+
+    <!-- CARDS GRID -->
+    <div class="cards-grid" id="cards-container">
+      <div class="loading-wrap"><div class="spinner"></div></div>
+    </div>
+  </main>
+</div>
+
+<button class="mobile-filter-toggle" id="mobile-filter-btn" onclick="toggleMobileSidebar()">
+  <span>🔍</span> Filter
+</button>
+
+<button class="build-yours" id="floating-register-btn" onclick="openModal('profileModal')">
+  <span class="bx-icon">⚙</span> Join Free &amp; Register →
+  <button class="close-build" onclick="event.stopPropagation(); this.parentElement.remove()">✕</button>
+</button>
+
+<div id="profileModal" class="modal-overlay" onclick="closeModalOutside(event, 'profileModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Create Your Profile</h2>
+        <p class="modal-sub">Join thousands finding their Lagansha every day.</p>
+      </div>
+      <button class="modal-close" onclick="closeModal('profileModal')">✕</button>
+    </div>
+
+    <form class="modal-body" id="create-profile-form" onsubmit="submitProfile(event)">
+
+      <!-- 1. Basic Information -->
+      <div class="section-head">
+        <span class="sec-icon">👤</span>
+        <span>1. Basic Information</span>
+      </div>
+
+      <div class="photo-upload" id="photoZone" onclick="document.getElementById('photoInput').click()">
+        <div class="photo-icon">📷</div>
+        <div class="photo-label">Upload Profile Photo</div>
+        <div class="photo-hint">Click or drag &amp; drop (JPG, PNG, WebP)</div>
+        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="previewPhoto(event, 'photoPreview', 'photoZone')">
+        <img id="photoPreview" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:12px;position:absolute;inset:0;">
+      </div>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Full Name *</label>
+          <input class="finput" id="reg-name" type="text" placeholder="e.g. Ananya Sen" required>
+        </div>
+        <div class="field">
+          <label class="flabel">Gender *</label>
+          <select class="finput" id="reg-gender" required>
+            <option>Female</option>
+            <option>Male</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Date of Birth</label>
+          <input class="finput" id="reg-dob" type="date">
+        </div>
+      </div>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Age *</label>
+          <input class="finput" id="reg-age" type="number" min="18" max="70" required>
+        </div>
+        <div class="field">
+          <label class="flabel">Height *</label>
+          <input class="finput" id="reg-height" type="text" placeholder="e.g. 5'6&quot;" required>
+        </div>
+        <div class="field">
+          <label class="flabel">Marital Status *</label>
+          <select class="finput" id="reg-marital" required>
+            <option>Never Married</option>
+            <option>Divorced</option>
+            <option>Widowed</option>
+            <option>Awaiting Divorce</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Religion *</label>
+          <select class="finput" id="reg-religion" required>
+            <option>Hindu</option>
+            <option>Muslim</option>
+            <option>Christian</option>
+            <option>Sikh</option>
+            <option>Buddhist</option>
+            <option>Jain</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Caste &amp; Sub-Caste</label>
+          <input class="finput" id="reg-caste" type="text" placeholder="e.g. Kayastha">
+        </div>
+        <div class="field">
+          <label class="flabel">Mother Tongue</label>
+          <input class="finput" id="reg-tongue" type="text" placeholder="e.g. Bengali">
+        </div>
+      </div>
+
+      <!-- 2. Education & Career -->
+      <div class="section-head" style="margin-top:24px;">
+        <span class="sec-icon">🎓</span>
+        <span>2. Education &amp; Career</span>
+      </div>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Highest Qualification *</label>
+          <input class="finput" id="reg-edu" type="text" placeholder="e.g. B.Tech, MBA" required>
+        </div>
+        <div class="field">
+          <label class="flabel">College Name</label>
+          <input class="finput" id="reg-college" type="text">
+        </div>
+        <div class="field">
+          <label class="flabel">Profession</label>
+          <input class="finput" id="reg-occ" type="text" placeholder="e.g. Software Engineer">
+        </div>
+      </div>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Company Name</label>
+          <input class="finput" id="reg-company" type="text">
+        </div>
+        <div class="field">
+          <label class="flabel">Annual Income</label>
+          <input class="finput" id="reg-income" type="text" placeholder="e.g. 15-20 LPA">
+        </div>
+        <div class="field">
+          <label class="flabel">Work Location</label>
+          <input class="finput" id="reg-worklocation" type="text" placeholder="e.g. Bangalore">
+        </div>
+      </div>
+
+      <!-- 3. Appearance & Lifestyle -->
+      <div class="section-head" style="margin-top:24px;">
+        <span class="sec-icon">🍽</span>
+        <span>3. Appearance &amp; Lifestyle</span>
+      </div>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Complexion</label>
+          <select class="finput" id="reg-complexion">
+            <option>Fair</option>
+            <option>Very Fair</option>
+            <option>Wheatish</option>
+            <option>Dusky</option>
+            <option>Deep</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Dietary Habits</label>
+          <select class="finput" id="reg-diet">
+            <option>Non-Vegetarian</option>
+            <option>Vegetarian</option>
+            <option>Eggetarian</option>
+            <option>Vegan</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Drinking Habits</label>
+          <select class="finput" id="reg-drinking">
+            <option>No</option>
+            <option>Occasionally</option>
+            <option>Yes</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Smoking Habits</label>
+          <select class="finput" id="reg-smoking">
+            <option>No</option>
+            <option>Occasionally</option>
+            <option>Yes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Physical Status</label>
+          <select class="finput" id="reg-physical">
+            <option>Normally Abled</option>
+            <option>Differently Abled</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Body Type</label>
+          <select class="finput" id="reg-body">
+            <option value="Slim">Slim</option>
+            <option value="Average" selected>Average</option>
+            <option value="Athletic">Athletic</option>
+            <option value="Heavy">Heavy</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 4. Family Background -->
+      <div class="section-head" style="margin-top:24px;">
+        <span class="sec-icon">🏠</span>
+        <span>4. Family Background</span>
+      </div>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Father's Profession</label>
+          <input class="finput" id="reg-father" type="text" placeholder="e.g. Business">
+        </div>
+        <div class="field">
+          <label class="flabel">Mother's Profession</label>
+          <input class="finput" id="reg-mother" type="text" placeholder="e.g. Homemaker">
+        </div>
+        <div class="field">
+          <label class="flabel">Siblings</label>
+          <input class="finput" id="reg-siblings" type="text" placeholder="e.g. 1 Sister">
+        </div>
+      </div>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Family Type *</label>
+          <select class="finput" id="reg-familytype" required>
+            <option>Nuclear</option>
+            <option>Joint</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Family Status</label>
+          <select class="finput" id="reg-familystatus">
+            <option>Upper Middle Class</option>
+            <option>Middle Class</option>
+            <option>Rich / Affluent</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Family Values</label>
+          <select class="finput" id="reg-values">
+            <option>Moderate</option>
+            <option>Traditional</option>
+            <option>Liberal</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 5. Location Details -->
+      <div class="section-head" style="margin-top:24px;">
+        <span class="sec-icon">📍</span>
+        <span>5. Location Details</span>
+      </div>
+
+      <div class="form-grid two">
+        <div class="field">
+          <label class="flabel">Current City *</label>
+          <input class="finput" id="reg-city" type="text" placeholder="e.g. Kolkata" required>
+        </div>
+        <div class="field">
+          <label class="flabel">State &amp; Country *</label>
+          <input class="finput" id="reg-residency" type="text" placeholder="e.g. West Bengal, India" required>
+        </div>
+      </div>
+
+      <!-- 6. Horoscope -->
+      <div class="section-head" style="margin-top:24px;">
+        <span class="sec-icon">⭐</span>
+        <span>6. Horoscope (Optional)</span>
+      </div>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Rashi (Zodiac)</label>
+          <select class="finput" id="reg-rashi">
+            <option value="">Select Rashi</option>
+            <option>Kanya (Virgo)</option>
+            <option>Tula (Libra)</option>
+            <option>Vrishchika (Scorpio)</option>
+            <option>Simha (Leo)</option>
+            <option>Karka (Cancer)</option>
+            <option>Mesh (Aries)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Birth Time</label>
+          <input class="finput" id="reg-birthtime" type="text" placeholder="e.g. 10:30 AM">
+        </div>
+        <div class="field">
+          <label class="flabel">Birth Place</label>
+          <input class="finput" id="reg-birthplace" type="text" placeholder="e.g. Kolkata">
+        </div>
+        <div class="field">
+          <label class="flabel">Gothra</label>
+          <select class="finput" id="reg-gothra">
+            <option value="">Select Gothra</option>
+            <option>Kashyapa</option>
+            <option>Bharadvaja</option>
+            <option>Vashishtha</option>
+            <option>Gautama</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Manglik Status</label>
+          <select class="finput" id="reg-manglik">
+            <option>No</option>
+            <option>Yes</option>
+            <option>Partial</option>
+          </select>
+        </div>
+        <div class="field" style="visibility:hidden"></div>
+      </div>
+
+      <!-- 7. Bio & Expectations -->
+      <div class="section-head" style="margin-top:24px;">
+        <span class="sec-icon" style="color:var(--pink)">ⓘ</span>
+        <span>7. Bio &amp; Expectations</span>
+      </div>
+
+      <div class="form-grid two">
+        <div class="field">
+          <label class="flabel">About Me</label>
+          <textarea class="finput ftextarea" id="reg-about" placeholder="Share your personality, hobbies, life goals..."></textarea>
+        </div>
+        <div class="field">
+          <label class="flabel">Partner Expectations</label>
+          <textarea class="finput ftextarea" id="reg-expectations" placeholder="Age, education, values expected..."></textarea>
+        </div>
+      </div>
+
+      <div class="verified-box">
+        <input type="checkbox" id="reg-verified" class="vchk" checked>
+        <label for="reg-verified" class="vlabel">
+          <span style="color:#3b82f6;font-size:1rem;">🛡</span>
+          <div>
+            <div class="vtitle">Verified Account</div>
+            <div class="vdesc">Mark this profile as verified (shows blue badge)</div>
+          </div>
+        </label>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" onclick="closeModal('profileModal')">Cancel</button>
+        <button type="submit" class="btn-create" id="create-submit-btn">Create Profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="viewModal" class="modal-overlay" onclick="closeModalOutside(event, 'viewModal')">
+  <div class="vp-box">
+    <button class="vp-close" onclick="closeModal('viewModal')">✕</button>
+
+    <div class="vp-header">
+      <div class="vp-hero-photo">
+        <img class="vp-hero-img" id="vp-img" src="" alt="" style="display:none;">
+        <div class="vp-initials-box" id="vp-initials" style="display:none;"></div>
+      </div>
+      <div class="vp-hero-info">
+        <div class="vp-name-row">
+          <span class="vp-name" id="vp-name"></span>
+          <span class="vp-verified" id="vp-verified">🛡 Verified</span>
+        </div>
+        <div class="vp-meta" id="vp-meta"></div>
+      </div>
+    </div>
+
+    <div class="vp-body">
+      <div class="vp-columns">
+        <div class="vp-col">
+          <div class="vp-sec-title"><span class="vp-ico">👤</span> Basic Information</div>
+          <div class="vp-row"><span class="vp-lbl">Date of Birth</span><span id="vp-dob" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Marital Status</span><span id="vp-marital" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Mother Tongue</span><span id="vp-tongue" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Physical Status</span><span id="vp-physical" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Body Type</span><span id="vp-body" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Complexion</span><span id="vp-complexion" class="vp-val"></span></div>
+
+          <div class="vp-sec-title" style="margin-top:16px;"><span class="vp-ico">🍽</span> Lifestyle</div>
+          <div class="vp-row"><span class="vp-lbl">Dietary Habits</span><span id="vp-diet" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Drinking</span><span id="vp-drinking" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Smoking</span><span id="vp-smoking" class="vp-val"></span></div>
+        </div>
+
+        <div class="vp-col">
+          <div class="vp-sec-title"><span class="vp-ico">🎓</span> Education &amp; Career</div>
+          <div class="vp-row"><span class="vp-lbl">Education</span><span id="vp-edu" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">College</span><span id="vp-college" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Occupation</span><span id="vp-occ" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Company</span><span id="vp-company" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Income</span><span id="vp-income" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Work Location</span><span id="vp-workloc" class="vp-val"></span></div>
+
+          <div class="vp-sec-title" style="margin-top:16px;"><span class="vp-ico">📍</span> Location</div>
+          <div class="vp-row"><span class="vp-lbl">Current City</span><span id="vp-city" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Residency</span><span id="vp-residency" class="vp-val"></span></div>
+        </div>
+
+        <div class="vp-col">
+          <div class="vp-sec-title"><span class="vp-ico">🏠</span> Family Details</div>
+          <div class="vp-row"><span class="vp-lbl">Father</span><span id="vp-father" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Mother</span><span id="vp-mother" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Siblings</span><span id="vp-siblings" class="vp-val"></span></div>
+          <div class="vp-row"><span class="vp-lbl">Values</span><span id="vp-values" class="vp-val"></span></div>
+
+          <div class="vp-sec-title" style="margin-top:16px;"><span class="vp-ico">⭐</span> Horoscope</div>
+          <div class="vp-hs-grid">
+            <div><div class="vp-hs-lbl">Rashi</div><div id="vp-rashi" class="vp-hs-val"></div></div>
+            <div><div class="vp-hs-lbl">Manglik</div><div id="vp-manglik" class="vp-hs-val"></div></div>
+            <div><div class="vp-hs-lbl">Birth Time</div><div id="vp-birthtime" class="vp-hs-val"></div></div>
+            <div><div class="vp-hs-lbl">Birth Place</div><div id="vp-birthplace" class="vp-hs-val"></div></div>
+            <div><div class="vp-hs-lbl">Gothra</div><div id="vp-gothra" class="vp-hs-val"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vp-bio-row">
+        <div class="vp-bio-col">
+          <div class="vp-bio-title">About Me</div>
+          <div id="vp-about" class="vp-bio-text"></div>
+        </div>
+        <div class="vp-bio-col">
+          <div class="vp-bio-title">Partner Expectations</div>
+          <div id="vp-expectations" class="vp-bio-text"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="vp-footer">
+      <div class="vp-footer-note">ⓘ Only verified contacts can initiate chat.</div>
+      <div class="vp-footer-actions">
+        <button class="vp-btn-maybe" onclick="closeModal('viewModal')">Maybe Later</button>
+        <button class="vp-btn-edit" id="view-edit-btn">✏ Edit</button>
+        <button class="vp-btn-delete" id="view-delete-btn">🗑 Delete</button>
+        <button class="vp-btn-interest" id="view-interest-btn">♥ Express Interest</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="editModal" class="modal-overlay" onclick="closeModalOutside(event, 'editModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Edit Profile</h2>
+        <p class="modal-sub">Update the profile details below.</p>
+      </div>
+      <button class="modal-close" onclick="closeModal('editModal')">✕</button>
+    </div>
+    <form class="modal-body" id="edit-profile-form" onsubmit="saveEdit(event)">
+
+      <div class="section-head"><span class="sec-icon">📷</span> Profile Photo</div>
+      <div class="photo-upload" style="padding:18px;" onclick="document.getElementById('editPhotoInput').click()">
+        <img id="edit-photo-preview" style="display:none;width:100px;height:100px;border-radius:12px;object-fit:cover;margin-bottom:8px;">
+        <div class="photo-icon" id="edit-photo-placeholder" style="font-size:1.5rem;">📷</div>
+        <div class="photo-hint" id="edit-photo-hint">Click to change photo</div>
+        <input type="file" id="editPhotoInput" accept="image/*" style="display:none" onchange="previewPhoto(event, 'edit-photo-preview', null, 'edit-photo-placeholder', 'edit-photo-hint')">
+      </div>
+
+      <div class="section-head">
+        <span class="sec-icon">👤</span>
+        <span>1. Basic Information</span>
+      </div>
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Full Name *</label>
+          <input class="finput" id="edit-name" type="text" required>
+        </div>
+        <div class="field">
+          <label class="flabel">Gender *</label>
+          <select class="finput" id="edit-gender" required>
+            <option>Female</option>
+            <option>Male</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Date of Birth</label>
+          <input class="finput" id="edit-dob" type="date">
+        </div>
+      </div>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Age *</label>
+          <input class="finput" id="edit-age" type="number" min="18" max="70" required>
+        </div>
+        <div class="field">
+          <label class="flabel">Height *</label>
+          <input class="finput" id="edit-height" type="text" required>
+        </div>
+        <div class="field">
+          <label class="flabel">Marital Status *</label>
+          <select class="finput" id="edit-marital" required>
+            <option>Never Married</option>
+            <option>Divorced</option>
+            <option>Widowed</option>
+            <option>Awaiting Divorce</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Religion *</label>
+          <select class="finput" id="edit-religion" required>
+            <option>Hindu</option>
+            <option>Muslim</option>
+            <option>Christian</option>
+            <option>Sikh</option>
+            <option>Buddhist</option>
+            <option>Jain</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Caste &amp; Sub-Caste</label>
+          <input class="finput" id="edit-caste" type="text">
+        </div>
+        <div class="field">
+          <label class="flabel">Mother Tongue</label>
+          <input class="finput" id="edit-tongue" type="text">
+        </div>
+      </div>
+
+      <div class="section-head" style="margin-top:24px;">
+        <span class="sec-icon">🎓</span>
+        <span>2. Education &amp; Career</span>
+      </div>
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Highest Qualification *</label>
+          <input class="finput" id="edit-edu" type="text" required>
+        </div>
+        <div class="field">
+          <label class="flabel">College Name</label>
+          <input class="finput" id="edit-college" type="text">
+        </div>
+        <div class="field">
+          <label class="flabel">Profession</label>
+          <input class="finput" id="edit-occ" type="text">
+        </div>
+      </div>
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Company Name</label>
+          <input class="finput" id="edit-company" type="text">
+        </div>
+        <div class="field">
+          <label class="flabel">Annual Income</label>
+          <input class="finput" id="edit-income" type="text">
+        </div>
+        <div class="field">
+          <label class="flabel">Work Location</label>
+          <input class="finput" id="edit-worklocation" type="text">
+        </div>
+      </div>
+
+      <div class="section-head" style="margin-top:24px;">
+        <span class="sec-icon">🍽</span>
+        <span>3. Appearance &amp; Lifestyle</span>
+      </div>
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Complexion</label>
+          <select class="finput" id="edit-complexion">
+            <option>Very Fair</option>
+            <option>Fair</option>
+            <option>Wheatish</option>
+            <option>Dusky</option>
+            <option>Deep</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Dietary Habits</label>
+          <select class="finput" id="edit-diet">
+            <option>Vegetarian</option>
+            <option>Non-Vegetarian</option>
+            <option>Eggetarian</option>
+            <option>Vegan</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Drinking Habits</label>
+          <select class="finput" id="edit-drinking">
+            <option>No</option>
+            <option>Occasionally</option>
+            <option>Yes</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Smoking Habits</label>
+          <select class="finput" id="edit-smoking">
+            <option>No</option>
+            <option>Occasionally</option>
+            <option>Yes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Physical Status</label>
+          <select class="finput" id="edit-physical">
+            <option>Normally Abled</option>
+            <option>Differently Abled</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Body Type</label>
+          <select class="finput" id="edit-body">
+            <option value="Slim">Slim</option>
+            <option value="Average">Average</option>
+            <option value="Athletic">Athletic</option>
+            <option value="Heavy">Heavy</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-head" style="margin-top:24px;">
+        <span class="sec-icon">🏠</span>
+        <span>4. Family Background</span>
+      </div>
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Father's Profession</label>
+          <input class="finput" id="edit-father" type="text">
+        </div>
+        <div class="field">
+          <label class="flabel">Mother's Profession</label>
+          <input class="finput" id="edit-mother" type="text">
+        </div>
+        <div class="field">
+          <label class="flabel">Siblings</label>
+          <input class="finput" id="edit-siblings" type="text">
+        </div>
+      </div>
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Family Type *</label>
+          <select class="finput" id="edit-familytype" required>
+            <option>Nuclear</option>
+            <option>Joint</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Family Status</label>
+          <select class="finput" id="edit-familystatus">
+            <option>Middle Class</option>
+            <option>Upper Middle Class</option>
+            <option>Rich / Affluent</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Family Values</label>
+          <select class="finput" id="edit-values">
+            <option>Moderate</option>
+            <option>Traditional</option>
+            <option>Liberal</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-head" style="margin-top:24px;">
+        <span class="sec-icon">📍</span>
+        <span>5. Location Details</span>
+      </div>
+      <div class="form-grid two">
+        <div class="field">
+          <label class="flabel">Current City *</label>
+          <input class="finput" id="edit-city" type="text" required>
+        </div>
+        <div class="field">
+          <label class="flabel">State &amp; Country *</label>
+          <input class="finput" id="edit-residency" type="text" required>
+        </div>
+      </div>
+
+      <div class="section-head" style="margin-top:24px;">
+        <span class="sec-icon">⭐</span>
+        <span>6. Horoscope</span>
+      </div>
+      <div class="form-grid three">
+        <div class="field">
+          <label class="flabel">Rashi (Zodiac)</label>
+          <select class="finput" id="edit-rashi">
+            <option value="">Select Rashi</option>
+            <option>Mesh (Aries)</option>
+            <option>Vrishabha (Taurus)</option>
+            <option>Mithuna (Gemini)</option>
+            <option>Karka (Cancer)</option>
+            <option>Simha (Leo)</option>
+            <option>Kanya (Virgo)</option>
+            <option>Tula (Libra)</option>
+            <option>Vrishchika (Scorpio)</option>
+            <option>Dhanu (Sagittarius)</option>
+            <option>Makara (Capricorn)</option>
+            <option>Kumbha (Aquarius)</option>
+            <option>Meena (Pisces)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Birth Time</label>
+          <input class="finput" id="edit-birthtime" type="text">
+        </div>
+        <div class="field">
+          <label class="flabel">Birth Place</label>
+          <input class="finput" id="edit-birthplace" type="text">
+        </div>
+        <div class="field">
+          <label class="flabel">Gothra</label>
+          <select class="finput" id="edit-gothra">
+            <option value="">Select Gothra</option>
+            <option>Atri</option>
+            <option>Bharadvaja</option>
+            <option>Jamadagni</option>
+            <option>Gautama</option>
+            <option>Kashyapa</option>
+            <option>Vashishtha</option>
+            <option>Vishvamitra</option>
+            <option>Agastya</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="flabel">Manglik Status</label>
+          <select class="finput" id="edit-manglik">
+            <option>No</option>
+            <option>Yes</option>
+            <option>Partial</option>
+          </select>
+        </div>
+        <div class="field" style="visibility:hidden"></div>
+      </div>
+
+      <div class="section-head" style="margin-top:24px;">
+        <span class="sec-icon" style="color:var(--pink)">ⓘ</span>
+        <span>7. Bio &amp; Expectations</span>
+      </div>
+      <div class="form-grid two">
+        <div class="field">
+          <label class="flabel">About Me</label>
+          <textarea class="finput ftextarea" id="edit-about"></textarea>
+        </div>
+        <div class="field">
+          <label class="flabel">Partner Expectations</label>
+          <textarea class="finput ftextarea" id="edit-expectations"></textarea>
+        </div>
+      </div>
+
+      <div class="verified-box">
+        <input type="checkbox" id="edit-verified" class="vchk">
+        <label for="edit-verified" class="vlabel">
+          <span style="color:#3b82f6;font-size:1rem;">🛡</span>
+          <div>
+            <div class="vtitle">Verified Account</div>
+            <div class="vdesc">Mark this profile as verified (shows blue badge)</div>
+          </div>
+        </label>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" onclick="closeModal('editModal')">Cancel</button>
+        <button type="submit" class="btn-create" id="edit-submit-btn">💾 Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="deleteModal" class="modal-overlay" onclick="closeModalOutside(event, 'deleteModal')">
+  <div class="del-box">
+    <div class="del-icon">🗑</div>
+    <h3 class="del-title">Delete Profile?</h3>
+    <p class="del-msg">Are you sure you want to permanently delete <strong id="del-name"></strong>? This action cannot be undone.</p>
+    <div class="del-actions">
+      <button class="del-btn-cancel" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="del-btn-confirm" onclick="confirmDelete()">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<!-- Supabase JS Library -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  // ── Supabase Setup ────────────────────────────────────────────────────────
+  const SU = 'https://voarjqebexjlvokbjygf.supabase.co';
+  const SK = 'sb_publishable_-wFEH-vEk9CtonSD1bHwHw_ZPty_t-v';
+  let sb = null;
+  try {
+    if (window.supabase) {
+      sb = window.supabase.createClient(SU, SK, { realtime: { params: { eventsPerSecond: 10 } } });
+    }
+  } catch(e) { console.warn("Supabase init fallback:", e); }
+
+  // ── Photo upload setup ───────────────────────────────────────────────────
+  // IMPORTANT: the GitHub token must NEVER live in this file — anyone can
+  // view-source a deployed page and steal it. Instead, the browser sends the
+  // photo to this serverless endpoint, which holds the token as a server-side
+  // secret and does the actual GitHub upload. See api/upload-photo.js, and
+  // the deployment note at the end of this file for how to set it up.
+  const PHOTO_UPLOAD_ENDPOINT = '/api/upload-photo';
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  let profiles = [];
+  let activeAgeRange = 'All';
+  let showFavoritesOnly = false;
+  let activeProfileId = null;
+
+  // Initial Mock Data (Ensures immediate visual preview even before DB fetch)
+  const initialMockProfiles = [
+    {
+      id: 'mock-1',
+      name: 'Ananya Sen',
+      age: 26,
+      gender: 'Female',
+      dob: '1998-05-14',
+      height: "5'5\"",
+      marital: 'Never Married',
+      religion: 'Hindu',
+      caste: 'Kayastha',
+      tongue: 'Bengali',
+      img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
+      initials: 'AS',
+      initialsColor: '#fce8ed',
+      physical: 'Normally Abled',
+      body: 'Slim',
+      complexion: 'Fair',
+      diet: 'Non-Vegetarian',
+      drinking: 'No',
+      smoking: 'No',
+      education: 'M.Tech Computer Science',
+      college: 'Jadavpur University',
+      occupation: 'Senior UX Designer',
+      company: 'TCS Innovation Labs',
+      income: '18-22 LPA',
+      workLocation: 'Kolkata',
+      city: 'Kolkata',
+      residency: 'West Bengal, India',
+      father: 'Retired Govt Officer',
+      mother: 'School Teacher',
+      siblings: '1 Younger Brother',
+      familyType: 'Nuclear',
+      familyStatus: 'Upper Middle Class',
+      values: 'Moderate',
+      rashi: 'Kanya (Virgo)',
+      manglik: 'No',
+      birthTime: '08:45 AM',
+      birthPlace: 'Kolkata',
+      gothra: 'Kashyapa',
+      about: 'Creative and enthusiastic UI/UX designer who enjoys painting, classical dance, and weekend cafe hopping.',
+      expectations: 'Looking for a well-educated, respectful partner with modern outlook and deep family values.',
+      verified: true,
+      liked: true
+    },
+    {
+      id: 'mock-2',
+      name: 'Rohan Sharma',
+      age: 29,
+      gender: 'Male',
+      dob: '1995-11-20',
+      height: "5'11\"",
+      marital: 'Never Married',
+      religion: 'Hindu',
+      caste: 'Brahmin',
+      tongue: 'Hindi',
+      img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400',
+      initials: 'RS',
+      initialsColor: '#b8e4f5',
+      physical: 'Normally Abled',
+      body: 'Athletic',
+      complexion: 'Wheatish',
+      diet: 'Vegetarian',
+      drinking: 'Occasionally',
+      smoking: 'No',
+      education: 'MBA Marketing',
+      college: 'IIM Lucknow',
+      occupation: 'Product Manager',
+      company: 'Swiggy',
+      income: '30+ LPA',
+      workLocation: 'Bangalore',
+      city: 'Bangalore',
+      residency: 'Karnataka, India',
+      father: 'Bank Manager',
+      mother: 'Homemaker',
+      siblings: '1 Elder Sister (Married)',
+      familyType: 'Nuclear',
+      familyStatus: 'Upper Middle Class',
+      values: 'Liberal',
+      rashi: 'Tula (Libra)',
+      manglik: 'No',
+      birthTime: '02:15 PM',
+      birthPlace: 'Delhi',
+      gothra: 'Bharadvaja',
+      about: 'Passionate product manager, avid trekker, and marathon runner who loves tech and traveling.',
+      expectations: 'Seeking an ambitious partner who values mutual career respect, travel, and health.',
+      verified: true,
+      liked: false
+    },
+    {
+      id: 'mock-3',
+      name: 'Priya Banerjee',
+      age: 27,
+      gender: 'Female',
+      dob: '1997-02-10',
+      height: "5'4\"",
+      marital: 'Never Married',
+      religion: 'Hindu',
+      caste: 'Brahmin',
+      tongue: 'Bengali',
+      img: null,
+      initials: 'PB',
+      initialsColor: '#ffd8d8',
+      physical: 'Normally Abled',
+      body: 'Average',
+      complexion: 'Fair',
+      diet: 'Non-Vegetarian',
+      drinking: 'No',
+      smoking: 'No',
+      education: 'MBBS, MD Pediatrics',
+      college: 'Medical College Kolkata',
+      occupation: 'Pediatrician Doctor',
+      company: 'Apollo Hospital',
+      income: '25-30 LPA',
+      workLocation: 'Kolkata',
+      city: 'Kolkata',
+      residency: 'West Bengal, India',
+      father: 'Doctor',
+      mother: 'Professor',
+      siblings: 'None',
+      familyType: 'Nuclear',
+      familyStatus: 'Rich / Affluent',
+      values: 'Traditional',
+      rashi: 'Meena (Pisces)',
+      manglik: 'Partial',
+      birthTime: '06:30 AM',
+      birthPlace: 'Kolkata',
+      gothra: 'Vashishtha',
+      about: 'Dedicated doctor with a heart for community care, reading literature, and Indian classical music.',
+      expectations: 'Seeking a compassionate professional with high ethical values and understanding nature.',
+      verified: true,
+      liked: false
+    }
+  ];
+
+  function dbToLocal(p) {
+    return {
+      id:           p.id,
+      name:         p.name         || '',
+      age:          p.age          || 0,
+      gender:       p.gender       || '',
+      dob:          p.dob          || '',
+      height:       p.height       || '',
+      marital:      p.marital_status   || '',
+      religion:     p.religion     || '',
+      caste:        p.caste        || '',
+      tongue:       p.mother_tongue || '',
+      img:          p.image        || null,
+      initials:     getInitials(p.name),
+      initialsColor:'#b8e4f5',
+      physical:     p.physical_status  || '',
+      body:         p.body_type    || '',
+      complexion:   p.complexion   || '',
+      diet:         p.diet         || '',
+      drinking:     p.drinking     || '',
+      smoking:      p.smoking      || '',
+      education:    p.education    || '',
+      college:      p.college      || '',
+      occupation:   p.profession   || '',
+      company:      p.company      || '',
+      income:       p.income       || '',
+      workLocation: p.work_location || '',
+      city:         p.current_city || '',
+      residency:    p.state        || '',
+      father:       p.father_profession || '',
+      mother:       p.mother_profession || '',
+      siblings:     p.siblings     || '',
+      familyType:   p.family_type  || '',
+      familyStatus: p.family_status || '',
+      values:       p.family_values || '',
+      rashi:        p.rashi        || '',
+      manglik:      p.manglik      || '',
+      birthTime:    p.birth_time   || '',
+      birthPlace:   p.birth_place  || '',
+      gothra:       p.gothra       || '',
+      about:        p.about        || '',
+      expectations: p.expectations || '',
+      verified:     !!p.verified,
+      liked:        false,
+    };
+  }
+
+  async function fetchProfiles() {
+    if (!sb) {
+      profiles = [...initialMockProfiles];
+      renderProfiles();
+      updateFilterDropdowns();
+      updateFavoriteBadge();
+      return;
+    }
+    try {
+      const { data, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
+      if (error || !data || data.length === 0) {
+        profiles = [...initialMockProfiles];
+      } else {
+        profiles = data.map(dbToLocal);
+      }
+    } catch(err) {
+      console.warn("Using fallback mock data due to network:", err);
+      profiles = [...initialMockProfiles];
+    }
+    renderProfiles();
+    updateFilterDropdowns();
+    updateFavoriteBadge();
+  }
+
+  function setupRT() {
+    if (!sb) return;
+    try {
+      sb.channel('profiles-rt')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, p => {
+          const alreadyExists = profiles.some(x => x.id === p.new.id);
+          if (alreadyExists) return;
+          profiles.unshift(dbToLocal(p.new));
+          updateFilterDropdowns(); renderProfiles();
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, p => {
+          const i = profiles.findIndex(x => x.id === p.new.id);
+          if (i !== -1) profiles[i] = { ...dbToLocal(p.new), liked: profiles[i].liked };
+          updateFilterDropdowns(); renderProfiles();
+        })
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'profiles' }, p => {
+          profiles = profiles.filter(x => x.id !== p.old.id);
+          updateFilterDropdowns(); renderProfiles();
+        })
+        .subscribe();
+    } catch(e) { console.warn("Realtime error:", e); }
+  }
+
+  function updateFilterDropdowns() {
+    populateDropdown('filter-religion',    'religion',    'All Religions');
+    populateDropdown('filter-height',      'height',      'Any Height', true);
+    populateDropdown('filter-marital',     'marital',     'Any Status');
+    populateDropdown('filter-manglik',     'manglik',     'Any');
+    populateDropdown('filter-rashi',       'rashi',       'Any Rashi');
+    populateDropdown('filter-complexion',  'complexion',  'Any Complexion');
+    populateDropdown('filter-smoking',     'smoking',     'Any');
+    populateDropdown('filter-drinking',    'drinking',    'Any');
+    populateDropdown('filter-familytype',  'familyType',  'Any');
+    populateDropdown('filter-familyvalues','values',      'Any');
+  }
+
+  function populateDropdown(selectId, property, defaultText, isHeight = false) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    const currentValue = select.value;
+    let uniqueValues = [...new Set(profiles.map(p => p[property]).filter(v => v && v !== 'Any Rashi'))];
+    if (isHeight) {
+      uniqueValues.sort((a, b) => parseHeightInches(a) - parseHeightInches(b));
+    } else {
+      uniqueValues.sort();
+    }
+    select.innerHTML = `<option value="Any">${defaultText}</option>`;
+    uniqueValues.forEach(val => {
+      const option = document.createElement('option');
+      option.value = val; option.textContent = val;
+      select.appendChild(option);
+    });
+    if (uniqueValues.includes(currentValue)) select.value = currentValue;
+    else select.value = 'Any';
+  }
+
+  function triggerFilter() { renderProfiles(); }
+
+  function setAgeFilter(range, btn) {
+    document.querySelectorAll('.age-pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    activeAgeRange = range;
+    renderProfiles();
+  }
+
+  function toggleFavoritesOnly() {
+    showFavoritesOnly = !showFavoritesOnly;
+    const favBtn = document.getElementById('nav-fav-toggle');
+    favBtn.classList.toggle('active', showFavoritesOnly);
+    document.getElementById('feed-title').textContent = showFavoritesOnly ? 'Shortlisted Partners' : 'Discover Your Partner';
+    renderProfiles();
+    showToast(showFavoritesOnly ? 'Showing shortlisted profiles' : 'Showing all profiles');
+  }
+
+  function resetFilters() {
+    document.getElementById('filter-search').value = '';
+    document.getElementById('filter-religion').value = 'Any';
+    document.getElementById('filter-location').value = '';
+    document.getElementById('filter-height').value = 'Any';
+    document.getElementById('filter-marital').value = 'Any';
+    document.getElementById('filter-tongue-search').value = '';
+    document.getElementById('filter-manglik').value = 'Any';
+    document.getElementById('filter-rashi').value = 'Any';
+    document.getElementById('filter-complexion').value = 'Any';
+    document.getElementById('filter-education').value = '';
+    document.getElementById('filter-smoking').value = 'Any';
+    document.getElementById('filter-drinking').value = 'Any';
+    document.getElementById('filter-familytype').value = 'Any';
+    document.getElementById('filter-familyvalues').value = 'Any';
+    activeAgeRange = 'All';
+    document.querySelectorAll('.age-pill').forEach(p => p.classList.remove('active'));
+    document.getElementById('pill-all').classList.add('active');
+    showFavoritesOnly = false;
+    document.getElementById('nav-fav-toggle').classList.remove('active');
+    document.getElementById('feed-title').textContent = 'Discover Your Partner';
+    renderProfiles();
+    showToast('Filters cleared successfully!');
+  }
+
+  function parseHeightInches(hString) {
+    if (!hString) return 0;
+    const match = hString.match(/(\d+)'\s*(\d+)?"?/);
+    if (match) { return (parseInt(match[1]) || 0) * 12 + (parseInt(match[2]) || 0); }
+    return 0;
+  }
+
+  function getFilteredProfiles() {
+    const searchVal    = document.getElementById('filter-search').value.toLowerCase().trim();
+    const religionVal  = document.getElementById('filter-religion').value;
+    const locationVal  = document.getElementById('filter-location').value.toLowerCase().trim();
+    const heightRange  = document.getElementById('filter-height').value;
+    const maritalVal   = document.getElementById('filter-marital').value;
+    const tongueVal    = document.getElementById('filter-tongue-search').value.toLowerCase().trim();
+    const manglikVal   = document.getElementById('filter-manglik').value;
+    const rashiVal     = document.getElementById('filter-rashi').value;
+    const complexionVal= document.getElementById('filter-complexion').value;
+    const educationVal = document.getElementById('filter-education').value.toLowerCase().trim();
+    const smokingVal   = document.getElementById('filter-smoking').value;
+    const drinkingVal  = document.getElementById('filter-drinking').value;
+    const familyTypeVal= document.getElementById('filter-familytype').value;
+    const familyValuesVal = document.getElementById('filter-familyvalues').value;
+
+    return profiles.filter(p => {
+      if (showFavoritesOnly && !p.liked) return false;
+      if (searchVal) {
+        const name = (p.name || '').toLowerCase();
+        const caste = (p.caste || '').toLowerCase();
+        const city = (p.city || '').toLowerCase();
+        const occ = (p.occupation || '').toLowerCase();
+        if (!name.includes(searchVal) && !caste.includes(searchVal) && !city.includes(searchVal) && !occ.includes(searchVal)) return false;
+      }
+      if (religionVal !== 'Any' && p.religion !== religionVal) return false;
+      if (maritalVal !== 'Any' && p.marital !== maritalVal) return false;
+      if (manglikVal !== 'Any' && p.manglik !== manglikVal) return false;
+      if (rashiVal !== 'Any' && p.rashi !== rashiVal) return false;
+      if (complexionVal !== 'Any' && p.complexion !== complexionVal) return false;
+      if (smokingVal !== 'Any' && p.smoking !== smokingVal) return false;
+      if (drinkingVal !== 'Any' && p.drinking !== drinkingVal) return false;
+      if (familyTypeVal !== 'Any' && p.familyType !== familyTypeVal) return false;
+      if (familyValuesVal !== 'Any' && p.values !== familyValuesVal) return false;
+      if (heightRange !== 'Any' && p.height !== heightRange) return false;
+      if (activeAgeRange !== 'All') {
+        if (activeAgeRange === '20-25' && (p.age < 20 || p.age > 25)) return false;
+        if (activeAgeRange === '26-30' && (p.age < 26 || p.age > 30)) return false;
+        if (activeAgeRange === '31+' && p.age < 31) return false;
+      }
+      if (locationVal) {
+        const city = (p.city || '').toLowerCase();
+        const residency = (p.residency || '').toLowerCase();
+        const workLoc = (p.workLocation || '').toLowerCase();
+        if (!city.includes(locationVal) && !residency.includes(locationVal) && !workLoc.includes(locationVal)) return false;
+      }
+      if (tongueVal && !(p.tongue || '').toLowerCase().includes(tongueVal)) return false;
+      if (educationVal && !(p.education || '').toLowerCase().includes(educationVal)) return false;
+      return true;
+    });
+  }
+
+  function renderProfiles() {
+    const container = document.getElementById('cards-container');
+    const filtered = getFilteredProfiles();
+    document.getElementById('profiles-count').textContent = filtered.length;
+    container.innerHTML = '';
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="no-results">
+          <div class="no-results-icon">💔</div>
+          <h3 class="no-results-title">No Profiles Match Your Search</h3>
+          <p class="no-results-text">Try adjusting some filters or resetting the search refinements.</p>
+        </div>`;
+      return;
+    }
+    filtered.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.setAttribute('data-id', p.id);
+      let imgHTML = '';
+      if (p.img) {
+        imgHTML = `
+          <div class="card-img">
+            <img src="${p.img}" alt="${escapeHTML(p.name)}" onerror="this.parentElement.innerHTML='<div class=\\'avatar-initials\\' style=\\'color:#c0183b;\\'>${p.initials || 'L'}</div>'">
+            <button class="fav-btn ${p.liked ? 'active' : ''}" onclick="toggleLike(event, '${p.id}')">♥</button>
+          </div>`;
+      } else {
+        const bgCol = p.initialsColor || '#b8e4f5';
+        imgHTML = `
+          <div class="card-img no-photo" style="background:${bgCol};">
+            <div class="avatar-initials">${p.initials || getInitials(p.name)}</div>
+            <button class="fav-btn ${p.liked ? 'active' : ''}" onclick="toggleLike(event, '${p.id}')">♥</button>
+          </div>`;
+      }
+      const verifiedHTML = p.verified ? `<span class="verified-badge" title="Verified Member">🛡</span>` : '';
+      card.innerHTML = `
+        ${imgHTML}
+        <div class="card-body">
+          <div>
+            <div class="card-name">
+              <span>${escapeHTML(p.name)}, ${p.age}</span>
+              ${verifiedHTML}
+            </div>
+            <div class="card-tag">${escapeHTML(p.religion)} • ${escapeHTML(p.caste)}</div>
+            <div class="card-info">
+              <div class="info-row"><span class="ico">🎓</span> <span>${escapeHTML(p.education)}</span></div>
+              <div class="info-row"><span class="ico">📍</span> <span>${escapeHTML(p.city)}, ${escapeHTML(p.residency)}</span></div>
+              <div class="info-row"><span class="ico">📏</span> <span>${escapeHTML(p.height)}</span></div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-profile" onclick="openViewModal('${p.id}')">View Full<br>Profile</button>
+            <button class="icon-btn edit" onclick="openEditModal(event, '${p.id}')" title="Edit Profile">✏️</button>
+            <button class="icon-btn del" onclick="openDeleteModal(event, '${p.id}')" title="Delete Profile">🗑</button>
+          </div>
+        </div>`;
+      container.appendChild(card);
+    });
+  }
+
+  function getInitials(name) {
+    if (!name) return 'L';
+    const split = name.trim().split(/\s+/);
+    return split.length > 1 ? (split[0][0] + split[1][0]).toUpperCase() : split[0][0].toUpperCase();
+  }
+
+  function escapeHTML(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, function(m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+    });
+  }
+
+  function toggleLike(e, id) {
+    e.stopPropagation();
+    const p = profiles.find(item => item.id === id);
+    if (p) {
+      p.liked = !p.liked;
+      updateFavoriteBadge();
+      e.currentTarget.classList.toggle('active', p.liked);
+      if (p.liked) { showToast(`❤️ Shortlisted ${p.name}!`); }
+      else {
+        showToast(`Removed ${p.name} from shortlists.`);
+        if (showFavoritesOnly) renderProfiles();
+      }
+    }
+  }
+
+  function updateFavoriteBadge() {
+    document.getElementById('fav-count').textContent = profiles.filter(p => p.liked).length;
+  }
+
+  function showToast(message, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = message;
+    t.className = 'toast-show ' + (type === 'danger' ? 'toast-danger' : 'toast-success');
+    setTimeout(() => { t.className = ''; }, 3000);
+  }
+
+  function toggleMobileSidebar() {
+    document.getElementById('sidebar').classList.toggle('mobile-open');
+    document.getElementById('sidebar-overlay').classList.toggle('active');
+  }
+
+  function closeMobileSidebar() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+  }
+
+  // Resizes the chosen file down to a small JPEG data URL (same as before).
+  function resizeToDataURL(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX = 400;
+          let w = img.width, h = img.height;
+          if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
+          else       { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        };
+        img.onerror = () => resolve(null);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => { showToast('Photo read failed.', 'danger'); resolve(null); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Resizes the photo, then sends it to our own serverless endpoint
+  // (PHOTO_UPLOAD_ENDPOINT), which holds the real GitHub token server-side
+  // and pushes the file into the repo. The browser never sees the token —
+  // only the resulting raw.githubusercontent.com URL comes back, and that's
+  // all that gets saved in Supabase's `image` column.
+  async function uploadPhoto(file) {
+    const dataUrl = await resizeToDataURL(file);
+    if (!dataUrl) return null;
+
+    try {
+      const base64Content = dataUrl.split(',')[1]; // strip the "data:image/jpeg;base64," prefix
+      const filename = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`;
+      const res = await fetch(PHOTO_UPLOAD_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename, content: base64Content })
+      });
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => '');
+        throw new Error(`Upload proxy failed (${res.status}): ${errBody}`);
+      }
+      const { url } = await res.json();
+      if (!url) throw new Error('Upload proxy returned no url');
+      return url;
+    } catch (err) {
+      console.warn('Photo upload via proxy failed, falling back to base64:', err);
+      showToast('Photo upload failed — saved as base64 instead.', 'danger');
+      return dataUrl;
+    }
+  }
+
+  function previewPhoto(event, imgId, zoneId, placeholderId, hintId) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = document.getElementById(imgId);
+      img.src = e.target.result;
+      img.style.display = 'block';
+      if (placeholderId) document.getElementById(placeholderId).style.display = 'none';
+      if (hintId) document.getElementById(hintId).textContent = 'Photo Selected (Click to change)';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function buildPayload(prefix, imageUrl) {
+    const gv = id => (document.getElementById(id)?.value || '').trim();
+    const gc = id => !!document.getElementById(id)?.checked;
+    return {
+      name:               gv(`${prefix}-name`),
+      gender:             gv(`${prefix}-gender`),
+      dob:                gv(`${prefix}-dob`) || null,
+      age:                parseInt(gv(`${prefix}-age`)) || 25,
+      height:             gv(`${prefix}-height`),
+      marital_status:     gv(`${prefix}-marital`),
+      religion:           gv(`${prefix}-religion`),
+      caste:              gv(`${prefix}-caste`),
+      mother_tongue:      gv(`${prefix}-tongue`),
+      education:          gv(`${prefix}-edu`),
+      college:            gv(`${prefix}-college`),
+      profession:         gv(`${prefix}-occ`),
+      company:            gv(`${prefix}-company`),
+      income:             gv(`${prefix}-income`),
+      work_location:      gv(`${prefix}-worklocation`),
+      current_city:       gv(`${prefix}-city`),
+      state:              gv(`${prefix}-residency`),
+      complexion:         gv(`${prefix}-complexion`),
+      diet:               gv(`${prefix}-diet`),
+      drinking:           gv(`${prefix}-drinking`),
+      smoking:            gv(`${prefix}-smoking`),
+      physical_status:    gv(`${prefix}-physical`),
+      body_type:          gv(`${prefix}-body`),
+      father_profession:  gv(`${prefix}-father`),
+      mother_profession:  gv(`${prefix}-mother`),
+      siblings:           gv(`${prefix}-siblings`),
+      family_type:        gv(`${prefix}-familytype`),
+      family_status:      gv(`${prefix}-familystatus`),
+      family_values:      gv(`${prefix}-values`),
+      rashi:              gv(`${prefix}-rashi`),
+      manglik:            gv(`${prefix}-manglik`),
+      birth_time:         gv(`${prefix}-birthtime`),
+      birth_place:        gv(`${prefix}-birthplace`),
+      gothra:             gv(`${prefix}-gothra`),
+      about:              gv(`${prefix}-about`),
+      expectations:       gv(`${prefix}-expectations`),
+      verified:           gc(`${prefix}-verified`),
+      ...(imageUrl ? { image: imageUrl } : {})
+    };
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  function closeModalOutside(e, id) { if (e.target.id === id) closeModal(id); }
+
+  async function submitProfile(e) {
+    e.preventDefault();
+    const btn = document.getElementById('create-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Creating Profile...';
+
+    const photoInput = document.getElementById('photoInput');
+    let imgUrl = null;
+    if (photoInput.files && photoInput.files[0]) {
+      imgUrl = await uploadPhoto(photoInput.files[0]);
+    }
+
+    const payload = buildPayload('reg', imgUrl);
+
+    if (sb) {
+      try {
+        const { data, error } = await sb.from('profiles').insert([payload]).select();
+        if (error) throw error;
+        if (data && data[0]) {
+          profiles.unshift(dbToLocal(data[0]));
+        }
+      } catch (err) {
+        console.warn('DB insert fallback to local:', err);
+        const localItem = { ...payload, id: 'local-' + Date.now(), image: imgUrl };
+        profiles.unshift(dbToLocal(localItem));
+      }
+    } else {
+      const localItem = { ...payload, id: 'local-' + Date.now(), image: imgUrl };
+      profiles.unshift(dbToLocal(localItem));
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Create Profile';
+    closeModal('profileModal');
+    document.getElementById('create-profile-form').reset();
+    document.getElementById('photoPreview').style.display = 'none';
+
+    updateFilterDropdowns();
+    renderProfiles();
+    showToast('✨ Profile registered successfully!');
+  }
+
+  function openViewModal(id) {
+    activeProfileId = id;
+    const p = profiles.find(x => x.id === id);
+    if (!p) return;
+
+    const imgEl = document.getElementById('vp-img');
+    const initEl = document.getElementById('vp-initials');
+
+    if (p.img) {
+      imgEl.src = p.img; imgEl.style.display = 'block'; initEl.style.display = 'none';
+    } else {
+      imgEl.style.display = 'none'; initEl.style.display = 'flex';
+      initEl.textContent = p.initials || getInitials(p.name);
+      initEl.style.background = p.initialsColor || '#b8e4f5';
+    }
+
+    document.getElementById('vp-name').textContent = p.name;
+    document.getElementById('vp-verified').style.display = p.verified ? 'inline-flex' : 'none';
+    document.getElementById('vp-meta').textContent = `${p.age} yrs • ${p.height} • ${p.religion} (${p.caste || 'N/A'}) • ${p.city}`;
+
+    document.getElementById('vp-dob').textContent = p.dob || 'N/A';
+    document.getElementById('vp-marital').textContent = p.marital || 'N/A';
+    document.getElementById('vp-tongue').textContent = p.tongue || 'N/A';
+    document.getElementById('vp-physical').textContent = p.physical || 'Normally Abled';
+    document.getElementById('vp-body').textContent = p.body || 'N/A';
+    document.getElementById('vp-complexion').textContent = p.complexion || 'N/A';
+
+    document.getElementById('vp-diet').textContent = p.diet || 'N/A';
+    document.getElementById('vp-drinking').textContent = p.drinking || 'No';
+    document.getElementById('vp-smoking').textContent = p.smoking || 'No';
+
+    document.getElementById('vp-edu').textContent = p.education || 'N/A';
+    document.getElementById('vp-college').textContent = p.college || 'N/A';
+    document.getElementById('vp-occ').textContent = p.occupation || 'N/A';
+    document.getElementById('vp-company').textContent = p.company || 'N/A';
+    document.getElementById('vp-income').textContent = p.income || 'N/A';
+    document.getElementById('vp-workloc').textContent = p.workLocation || 'N/A';
+
+    document.getElementById('vp-city').textContent = p.city || 'N/A';
+    document.getElementById('vp-residency').textContent = p.residency || 'N/A';
+
+    document.getElementById('vp-father').textContent = p.father || 'N/A';
+    document.getElementById('vp-mother').textContent = p.mother || 'N/A';
+    document.getElementById('vp-siblings').textContent = p.siblings || 'None';
+    document.getElementById('vp-values').textContent = p.values || 'Moderate';
+
+    document.getElementById('vp-rashi').textContent = p.rashi || 'N/A';
+    document.getElementById('vp-manglik').textContent = p.manglik || 'No';
+    document.getElementById('vp-birthtime').textContent = p.birthTime || 'N/A';
+    document.getElementById('vp-birthplace').textContent = p.birthPlace || 'N/A';
+    document.getElementById('vp-gothra').textContent = p.gothra || 'N/A';
+
+    document.getElementById('vp-about').textContent = p.about || 'No description provided.';
+    document.getElementById('vp-expectations').textContent = p.expectations || 'No expectations specified.';
+
+    document.getElementById('view-edit-btn').onclick = () => { closeModal('viewModal'); openEditModal(null, p.id); };
+    document.getElementById('view-delete-btn').onclick = () => { closeModal('viewModal'); openDeleteModal(null, p.id); };
+    document.getElementById('view-interest-btn').onclick = () => { showToast(`💖 Interest expressed to ${p.name}!`); };
+
+    openModal('viewModal');
+  }
+
+  function openEditModal(e, id) {
+    if (e) e.stopPropagation();
+    activeProfileId = id;
+    const p = profiles.find(x => x.id === id);
+    if (!p) return;
+
+    const preview = document.getElementById('edit-photo-preview');
+    const placeholder = document.getElementById('edit-photo-placeholder');
+    const hint = document.getElementById('edit-photo-hint');
+
+    if (p.img) {
+      preview.src = p.img; preview.style.display = 'block';
+      placeholder.style.display = 'none';
+      hint.textContent = 'Click to change photo';
+    } else {
+      preview.style.display = 'none';
+      placeholder.style.display = 'block';
+      hint.textContent = 'Click to upload photo';
+    }
+
+    const sv = (elemId, val) => { const el = document.getElementById(elemId); if (el) el.value = val || ''; };
+    const sc = (elemId, val) => { const el = document.getElementById(elemId); if (el) el.checked = !!val; };
+
+    sv('edit-name', p.name);
+    sv('edit-gender', p.gender || 'Female');
+    sv('edit-dob', p.dob);
+    sv('edit-age', p.age);
+    sv('edit-height', p.height);
+    sv('edit-marital', p.marital);
+    sv('edit-religion', p.religion);
+    sv('edit-caste', p.caste);
+    sv('edit-tongue', p.tongue);
+
+    sv('edit-edu', p.education);
+    sv('edit-college', p.college);
+    sv('edit-occ', p.occupation);
+    sv('edit-company', p.company);
+    sv('edit-income', p.income);
+    sv('edit-worklocation', p.workLocation);
+
+    sv('edit-complexion', p.complexion);
+    sv('edit-diet', p.diet);
+    sv('edit-drinking', p.drinking);
+    sv('edit-smoking', p.smoking);
+    sv('edit-physical', p.physical);
+    sv('edit-body', p.body);
+
+    sv('edit-father', p.father);
+    sv('edit-mother', p.mother);
+    sv('edit-siblings', p.siblings);
+    sv('edit-familytype', p.familyType);
+    sv('edit-familystatus', p.familyStatus);
+    sv('edit-values', p.values);
+
+    sv('edit-city', p.city);
+    sv('edit-residency', p.residency);
+
+    sv('edit-rashi', p.rashi);
+    sv('edit-birthtime', p.birthTime);
+    sv('edit-birthplace', p.birthPlace);
+    sv('edit-gothra', p.gothra);
+    sv('edit-manglik', p.manglik);
+
+    sv('edit-about', p.about);
+    sv('edit-expectations', p.expectations);
+    sc('edit-verified', p.verified);
+
+    openModal('editModal');
+  }
+
+  async function saveEdit(e) {
+    e.preventDefault();
+    if (!activeProfileId) return;
+
+    const btn = document.getElementById('edit-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const photoInput = document.getElementById('editPhotoInput');
+    let imgUrl = null;
+    if (photoInput.files && photoInput.files[0]) {
+      imgUrl = await uploadPhoto(photoInput.files[0]);
+    }
+
+    const payload = buildPayload('edit', imgUrl);
+
+    if (sb && !activeProfileId.startsWith('mock-') && !activeProfileId.startsWith('local-')) {
+      try {
+        const { error } = await sb.from('profiles').update(payload).eq('id', activeProfileId);
+        if (error) console.warn("Supabase update error:", error);
+      } catch(err) { console.warn("Update fallback:", err); }
+    }
+
+    const idx = profiles.findIndex(x => x.id === activeProfileId);
+    if (idx !== -1) {
+      const existing = profiles[idx];
+      profiles[idx] = {
+        ...existing,
+        ...dbToLocal({ ...payload, id: activeProfileId }),
+        liked: existing.liked
+      };
+      if (imgUrl) profiles[idx].img = imgUrl;
+    }
+
+    btn.disabled = false;
+    btn.textContent = '💾 Save Changes';
+    closeModal('editModal');
+    updateFilterDropdowns();
+    renderProfiles();
+    showToast('💾 Profile updated successfully!');
+  }
+
+  function openDeleteModal(e, id) {
+    if (e) e.stopPropagation();
+    activeProfileId = id;
+    const p = profiles.find(x => x.id === id);
+    if (p) {
+      document.getElementById('del-name').textContent = p.name;
+      openModal('deleteModal');
+    }
+  }
+
+  async function confirmDelete() {
+    if (!activeProfileId) return;
+    const p = profiles.find(x => x.id === activeProfileId);
+
+    if (sb && !activeProfileId.startsWith('mock-') && !activeProfileId.startsWith('local-')) {
+      try {
+        await sb.from('profiles').delete().eq('id', activeProfileId);
+      } catch(e) { console.warn("Delete fallback:", e); }
+    }
+
+    profiles = profiles.filter(x => x.id !== activeProfileId);
+    closeModal('deleteModal');
+    updateFilterDropdowns();
+    renderProfiles();
+    updateFavoriteBadge();
+    showToast(`Deleted ${p ? p.name : 'profile'}.`, 'danger');
+  }
+
+  // ── Startup ───────────────────────────────────────────────────────────────
+  window.onload = function() {
+    fetchProfiles();
+    setupRT();
+  };
+</script>
+</body>
+</html>
